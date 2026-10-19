@@ -33,8 +33,8 @@ describe('توليد الوثائق', () => {
   const demo = produce(withMeeting, (d) => void Object.assign(d, applyDemo(d)));
 
   for (const [name, project] of [['مشروع افتراضي باجتماع', withMeeting], ['بيانات توضيحية', demo]] as const) {
-    it(`لا رمز متغير خام في أي من الوثائق الثلاث عشرة — ${name}`, () => {
-      expect(DOC_DEFS).toHaveLength(13);
+    it(`لا رمز متغير خام في أي من الوثائق الأربع عشرة — ${name}`, () => {
+      expect(DOC_DEFS).toHaveLength(14);
       for (const def of DOC_DEFS) {
         const doc = buildDoc(project, def.id, { meetingId: project.meetings[0].id });
         const all = doc.blocks.flatMap(texts).concat(doc.title, doc.subtitle, doc.footer);

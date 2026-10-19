@@ -18,7 +18,8 @@ export default function Reports() {
   const update = useStore((s) => s.update);
   const exportProject = useStore((s) => s.exportProject);
   const meetingId = useUi((s) => s.reportMeetingId);
-  const [sel, setSel] = useState('charter');
+  const sel = useUi((s) => s.reportDoc);
+  const setSel = (id: string): void => useUi.setState({ reportDoc: id });
   const [busy, setBusy] = useState(false);
   const ds = project.docSettings;
   const meetingBased = sel === 'agenda' || sel === 'minutes';
@@ -61,7 +62,7 @@ export default function Reports() {
       <SectionHead
         num="17 / التقارير والتصدير"
         title="التقارير والتصدير"
-        sub="ثلاث عشرة وثيقة تُولَّد تلقائيًا من البنود والقرارات والمتغيرات، بعربية RTL وفهرس وترقيم وجداول وتواريخ، وتمييز بين المعتمد والمقترح."
+        sub="أربع عشرة وثيقة تُولَّد تلقائيًا من البنود والقرارات والمتغيرات، بعربية RTL وفهرس وترقيم وجداول وتواريخ، وتمييز بين المعتمد والمقترح."
       />
 
       <div className="grid gap-5 xl:grid-cols-[22rem_1fr]">

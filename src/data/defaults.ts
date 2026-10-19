@@ -25,10 +25,10 @@ import { buildLegalRefs, buildReviewItems } from './legal';
 
 export const SCHEMA_VERSION = 1;
 
-export const DEFAULT_PROJECT_NAME = 'مشروع ميثاق {{fund_name}}';
+export const DEFAULT_PROJECT_NAME = 'مشروع {{charter_name}}';
 
 export const DOC_DEFS: { id: string; title: string }[] = [
-  { id: 'charter', title: 'ميثاق {{fund_name}}' },
+  { id: 'charter', title: '{{charter_name}}' },
   { id: 'bylaws', title: 'مسودة اللائحة الأساسية للصندوق' },
   { id: 'contrib', title: 'لائحة الاشتراكات والالتزامات' },
   { id: 'loans', title: 'لائحة القروض الحسنة والتكافل' },
@@ -41,6 +41,7 @@ export const DOC_DEFS: { id: string; title: string }[] = [
   { id: 'open', title: 'تقرير القرارات غير المحسومة' },
   { id: 'risk', title: 'تقرير مخاطر المشروع وفجواته' },
   { id: 'summary', title: 'الملخص التنفيذي لأفراد العائلة' },
+  { id: 'explainer', title: 'الشرح المبسط لـ{{charter_name}}' },
 ];
 
 export const defaultVars = (): Vars => Object.fromEntries(VAR_DEFS.map((d) => [d.key, d.def]));
@@ -104,6 +105,16 @@ export const createDefaultProject = (): Project => {
         { id: 'sg-3', name: '', role: 'أمين السر' },
       ],
       footerLine: '{{fund_name}} — مسودة قيد النقاش غير معتمدة نظامًا',
+    },
+    presentation: { hidden: {}, extra: {} },
+    registration: {
+      endpoint: '',
+      intro:
+        'يسرّنا مشاركتك في بناء ميثاق عائلتنا. سجّل بياناتك الأساسية ثم اختر الالتزام الذي تراه مناسبًا. ما تدخله يُحفظ مباشرة ويمكنك تعديله في أي وقت قبل اعتماد الميثاق.',
+      amounts: [],
+      years: [],
+      allowOneTime: true,
+      open: true,
     },
     confirmations: {},
     counters: { decision: 0 },

@@ -18,7 +18,9 @@ export type SectionId =
   | 'meetings'
   | 'library'
   | 'review'
-  | 'reports';
+  | 'reports'
+  | 'present'
+  | 'registration';
 
 export type Custom =
   | 'identity_confirmed'

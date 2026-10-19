@@ -22,6 +22,8 @@ interface UiState {
   focusClause: string | null;
   /** الاجتماع المعتمد لتوليد جدول الأعمال والمحضر */
   reportMeetingId: string | null;
+  /** الوثيقة المحددة في التقارير */
+  reportDoc: string;
   navOpen: boolean;
   setNavOpen: (v: boolean) => void;
 }
@@ -35,6 +37,7 @@ export const useUi = create<UiState>((set) => ({
   setPrintDoc: (id) => set({ printDoc: id }),
   focusClause: null,
   reportMeetingId: null,
+  reportDoc: 'charter',
   navOpen: false,
   setNavOpen: (v) => set({ navOpen: v }),
 }));

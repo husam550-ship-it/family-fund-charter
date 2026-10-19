@@ -16,6 +16,8 @@ import {
   Users,
   Wallet,
   Home,
+  Presentation,
+  UserPlus,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { SectionId } from '../data/checklist';
@@ -45,6 +47,8 @@ export const SECTIONS: SectionDef[] = [
   { id: 'library', label: 'مكتبة البنود والبدائل', icon: Library, num: '15' },
   { id: 'review', label: 'مراجعة الميثاق واكتشاف النواقص', icon: SearchCheck, num: '16' },
   { id: 'reports', label: 'التقارير والتصدير', icon: FileText, num: '17' },
+  { id: 'present', label: 'عرض الميثاق للأسرة', icon: Presentation, num: '18' },
+  { id: 'registration', label: 'تسجيل المشاركين والتزاماتهم', icon: UserPlus, num: '19' },
 ];
 
 export const sectionLabel = (id: SectionId): string => SECTIONS.find((s) => s.id === id)?.label ?? id;

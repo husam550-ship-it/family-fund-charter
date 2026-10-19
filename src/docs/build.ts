@@ -15,6 +15,7 @@ import { dateLabel, money, num, pct } from '../lib/format';
 import { decisionNumber } from '../lib/actions';
 import { RIGHT_LABELS } from '../data/structures';
 import { assetNetAnnual } from '../engine/simulate';
+import { visibleSlides } from '../present/slides';
 import type { Block, Doc, DocOptions } from './types';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'];
@@ -521,6 +522,18 @@ const summary = (e: Env): Block[] => {
   ];
 };
 
+const explainer = (e: Env): Block[] => {
+  const blocks: Block[] = [{ t: 'note', kind: 'info', text: `شرح مبسط لعرضه على أفراد العائلة قبل بدء النقاش. ${NUMBERS_NOTE}` }];
+  for (const s of visibleSlides({ p: e.p, ctx: e.ctx, base: e.sims.base, joinLink: null }).filter((x) => x.kind !== 'cover')) {
+    blocks.push({ t: 'h', level: 2, text: s.title });
+    if (s.lead) blocks.push({ t: 'p', text: s.lead });
+    if (s.points.length > 0) blocks.push({ t: 'ul', items: s.points });
+    if (s.facts.length > 0) blocks.push({ t: 'table', head: ['البند', 'القيمة'], rows: s.facts.map((f) => [f.label, f.value]) });
+    if (s.ask) blocks.push({ t: 'note', kind: 'info', text: `السؤال الذي سنقرره: ${s.ask}` });
+  }
+  return blocks;
+};
+
 // ───────── نقطة الدخول
 
 /** تمرير أخير يضمن ألا يبقى رمز متغير خام في أي وثيقة مهما كان مصدر النص (بنود، بدائل، اجتماعات…) */
@@ -563,6 +576,7 @@ export const buildDoc = (p: Project, docId: string, o: DocOptions = { meetingId:
       open: openReport,
       risk: riskReport,
       summary: summary,
+      explainer: explainer,
     }[docId]!(e)
   ).map((b) => resolveBlock(b, e.R));
 

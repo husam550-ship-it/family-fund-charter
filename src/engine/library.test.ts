@@ -57,7 +57,7 @@ describe('مكتبة البنود', () => {
 describe('المتغيرات الذكية', () => {
   it('تغيير اسم العائلة يحدّث الاسم والنصوص المرتبطة', () => {
     const p = createDefaultProject();
-    expect(resolveText('ذرية {{family_name}}', buildContext(p))).toBe('ذرية حسين عمر');
+    expect(resolveText('ذرية {{family_name}}', buildContext(p))).toBe('ذرية حسين عمر شرواني');
     p.vars.family_name = 'فلان بن علان';
     const ctx = buildContext(p);
     expect(ctx.fund_name).toBe('صندوق ذرية فلان بن علان العائلي');

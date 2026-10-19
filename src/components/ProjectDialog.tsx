@@ -41,7 +41,7 @@ export const ProjectDialog = ({ onClose }: { onClose: () => void }) => {
       {tab === 'project' && (
         <div className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="اسم المشروع" hint="يمكن أن يحتوي {{family_name}} و{{fund_name}} فيتغير مع تغيير الاسم.">
+            <Field label="اسم المشروع" hint="يمكن أن يحتوي {{charter_name}} و{{family_name}} و{{fund_name}} فيتغير مع تغيير الاسم.">
               <TextInput value={s.project.name} onChange={(v) => s.update((d) => void (d.name = v), 'pname')} />
             </Field>
             <div className="rounded-lg bg-brand-50 p-3 text-sm">
@@ -49,6 +49,7 @@ export const ProjectDialog = ({ onClose }: { onClose: () => void }) => {
               <div className="font-bold text-brand-900">{resolvedName}</div>
             </div>
             <VarField k="family_name" />
+            <VarField k="charter_name" />
             <VarField k="fund_name" />
           </div>
 

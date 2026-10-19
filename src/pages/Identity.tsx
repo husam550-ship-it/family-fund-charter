@@ -36,6 +36,7 @@ export default function IdentityPage() {
         </p>
         <div className="mb-4 grid gap-3 md:grid-cols-3">
           <VarField k="family_name" />
+          <VarField k="charter_name" />
           <VarField k="fund_name" />
           <VarField k="fund_official_name" />
           <VarField k="namesake_status" />

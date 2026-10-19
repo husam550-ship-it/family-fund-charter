@@ -419,6 +419,26 @@ export interface DocSettings {
   footerLine: string;
 }
 
+// ───────── العرض والتسجيل ─────────
+export interface PresentationSettings {
+  /** شرائح مخفاة من العرض ومن وثيقة الشرح المبسط */
+  hidden: Record<string, boolean>;
+  /** نقطة إضافية يكتبها المستخدم لكل شريحة */
+  extra: Record<string, string>;
+}
+export interface RegSettings {
+  /** رابط نشر خدمة التسجيل (Google Apps Script) */
+  endpoint: string;
+  intro: string;
+  /** خيارات الاشتراك الشهري المقترحة للمشاركين (ريال) */
+  amounts: number[];
+  /** خيارات مدة الالتزام المقترحة (سنوات) */
+  years: number[];
+  allowOneTime: boolean;
+  /** استقبال التسجيلات */
+  open: boolean;
+}
+
 // ───────── المشروع ─────────
 export interface Project {
   schemaVersion: number;
@@ -457,6 +477,8 @@ export interface Project {
   reviewItems: ReviewItem[];
   findings: Record<string, FindingState>;
   docSettings: DocSettings;
+  presentation: PresentationSettings;
+  registration: RegSettings;
   /** اعتماد صريح من المستخدم لبنى مقترحة (فئات، أوزان، لجان…) */
   confirmations: Record<string, boolean>;
   counters: { decision: number };

@@ -33,6 +33,8 @@ const PAGES: Record<SectionId, ComponentType> = {
   library: L(() => import('./pages/Library')),
   review: L(() => import('./pages/Review')),
   reports: L(() => import('./pages/Reports')),
+  present: L(() => import('./pages/Present')),
+  registration: L(() => import('./pages/Registration')),
 };
 
 const Loading = () => (

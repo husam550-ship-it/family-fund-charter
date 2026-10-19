@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import { createBackend } from '../registration/harness.mjs';
 
 const DIST = path.resolve('dist');
 const PREFIX = '/family-fund-charter/'; // يحاكي مستودعًا فرعيًا على GitHub Pages
@@ -41,15 +42,23 @@ const check = async (name, fn) => {
 const eq = (a, b, m) => { if (a !== b) throw new Error(`${m ?? 'قيمتان مختلفتان'}: المتوقع «${b}» والفعلي «${a}»`); };
 const ok = (c, m) => { if (!c) throw new Error(m ?? 'شرط غير متحقق'); };
 
-const newPage = async (opts = {}) => {
+// خدمة التسجيل: تُشغَّل Code.gs الحقيقية بمحاكاة Google، ويُعترض أي طلب إلى script.google.com ليصلها
+const sheetRoute = (backend) => (route) => {
+  const req = route.request();
+  const reply = req.method() === 'POST' ? backend.rawPost(req.postData() ?? '') : backend.get(Object.fromEntries(new URL(req.url()).searchParams));
+  return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(reply) });
+};
+
+const newPage = async (opts = {}, { hash = '', ready = '#app-shell', backend = null } = {}) => {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 1000 }, acceptDownloads: true, ...opts });
   await ctx.addInitScript(() => { window.print = () => { window.__printed = true; }; });
+  if (backend) await ctx.route('https://script.google.com/**', sheetRoute(backend));
   const page = await ctx.newPage();
   page.on('pageerror', (e) => consoleErrors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push('console: ' + m.text()); });
   page.on('requestfailed', (r) => consoleErrors.push('requestfailed: ' + r.url()));
-  await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.waitForSelector('#app-shell');
+  await page.goto(BASE + hash, { waitUntil: 'networkidle' });
+  await page.waitForSelector(ready);
   return { ctx, page };
 };
 const go = async (page, s) => { await page.evaluate((x) => { window.location.hash = '#/' + x; }, s); await page.waitForTimeout(500); };
@@ -74,14 +83,24 @@ await check('20. يعمل مباشرة دون رقم دخول أو تسجيل', 
 });
 
 await check('25. المشروع الافتراضي باسمه المطلوب وجميع البنود «يحتاج مناقشة» (22: لا اعتماد تلقائي)', async () => {
-  eq(await page.locator('h1').first().innerText(), 'مشروع ميثاق صندوق ذرية حسين عمر العائلي');
+  eq(await page.locator('h1').first().innerText(), 'مشروع ميثاق ذرية حسين عمر شرواني');
   await go(page, 'library');
   ok((await page.getByText('معتمد: 0').count()) > 0 || (await page.locator('button[role=radio]', { hasText: 'معتمد' }).first().innerText()).includes('0'), 'يوجد بند معتمد افتراضيًا');
   const n = await page.locator('article[id^=clause-]').count();
   ok(n >= 80, `عدد البنود ${n}`);
 });
 
-await check('1. اسم «حسين عمر» قابل للتعديل ويتحدّث في كل الأماكن، وتعديل اسم المشروع', async () => {
+await check('اسم الميثاق قابل للتعديل مستقلًا عن اسم العائلة ويتحدث في العنوان', async () => {
+  await go(page, 'dashboard');
+  await varInput(page, 'اسم الميثاق').fill('ميثاق الأسرة التجريبي');
+  await page.waitForTimeout(300);
+  eq(await page.locator('h1').first().innerText(), 'مشروع ميثاق الأسرة التجريبي');
+  await varInput(page, 'اسم الميثاق').fill('ميثاق ذرية {{family_name}}');
+  await page.waitForTimeout(300);
+  eq(await page.locator('h1').first().innerText(), 'مشروع ميثاق ذرية حسين عمر شرواني');
+});
+
+await check('1. اسم «حسين عمر شرواني» قابل للتعديل ويتحدّث في كل الأماكن، وتعديل اسم المشروع', async () => {
   await go(page, 'dashboard');
   await varInput(page, 'اسم صاحب الاسم (العائلة)').fill('أحمد بن سالم');
   await page.waitForTimeout(300);
@@ -98,7 +117,7 @@ await check('1. اسم «حسين عمر» قابل للتعديل ويتحدّ�
   await page.waitForTimeout(300);
   ok((await page.locator('header').first().innerText()).includes('مشروع ميثاق تجريبي'), 'اسم المشروع لم يتغير');
   await go(page, 'dashboard');
-  await varInput(page, 'اسم صاحب الاسم (العائلة)').fill('حسين عمر');
+  await varInput(page, 'اسم صاحب الاسم (العائلة)').fill('حسين عمر شرواني');
 });
 
 await check('2/13. اختيار بند واعتماده يظهر في الميثاق النهائي (معتمد) والمقترح يظهر مميزًا', async () => {
@@ -390,11 +409,34 @@ await check('DOCX و Markdown: تصدير فعلي بأسماء وامتدادا
   }
 });
 
-await check('الأرقام السالبة والتنسيق: لا رموز متغيرات خام {{ في أي وثيقة من الثلاث عشرة', async () => {
+await check('الشرح المبسط: عرض بالأسهم، وإخفاء شريحة ونقطة إضافية تنعكسان على النسخة المطبوعة', async () => {
+  await go(page, 'present');
+  await page.getByLabel('نقطة إضافية — ما الذي ندفعه؟').fill('ملاحظة المجلس الخاصة');
+  await page.locator('li', { hasText: 'كيف نحفظ المال ونراقبه؟' }).getByLabel('يظهر في العرض').uncheck();
+  await page.getByRole('button', { name: /بدء العرض/ }).click();
+  const deck = page.getByRole('dialog', { name: 'عرض الميثاق للأسرة' });
+  ok((await deck.innerText()).includes('ميثاق ذرية حسين عمر شرواني'), 'غلاف العرض بلا اسم الميثاق');
+  await page.keyboard.press('ArrowLeft');
+  ok((await deck.innerText()).includes('لماذا نجتمع؟'), 'السهم الأيسر لا ينقل للشريحة التالية');
+  ok(/الشريحة 2 من \d+/.test(await deck.innerText()), 'عداد الشرائح');
+  await page.keyboard.press('ArrowRight');
+  ok((await deck.innerText()).includes('عرض مبسط قبل بدء النقاش'), 'السهم الأيمن لا يعيد للغلاف');
+  await page.keyboard.press('End');
+  ok((await deck.innerText()).includes('تنبيه مهم'), 'لا تصل إلى شريحة التنبيه');
+  await page.keyboard.press('Escape');
+  eq(await page.getByRole('dialog', { name: 'عرض الميثاق للأسرة' }).count(), 0, 'العرض لم يُغلق');
+  await page.getByRole('button', { name: /نسخة مطبوعة للتوزيع/ }).click();
+  await page.waitForTimeout(400);
+  const doc = await page.locator('[aria-label="معاينة الوثيقة"]').innerText();
+  ok(doc.includes('ملاحظة المجلس الخاصة'), 'النقطة الإضافية لا تظهر في الوثيقة');
+  ok(doc.includes('ما الذي ندفعه؟') && !doc.includes('كيف نحفظ المال ونراقبه؟'), 'الشريحة المخفاة ما زالت في الوثيقة');
+});
+
+await check('الأرقام السالبة والتنسيق: لا رموز متغيرات خام {{ في أي وثيقة من الأربع عشرة', async () => {
   await go(page, 'reports');
   const docs = page.locator('main li button[aria-current]');
-  eq(await docs.count(), 13, 'عدد الوثائق');
-  for (let i = 0; i < 13; i++) {
+  eq(await docs.count(), 14, 'عدد الوثائق');
+  for (let i = 0; i < 14; i++) {
     await docs.nth(i).click();
     await page.waitForTimeout(250);
     const name = await docs.nth(i).innerText();
@@ -422,6 +464,106 @@ await check('18. الهاتف: القوائم والأزرار تعمل ولا �
   ok(await page.getByRole('dialog').isVisible(), 'نافذة المشروع لم تفتح');
 });
 await ctx.close();
+
+// ───── التسجيل: إدارة ومشاركون على خدمة Code.gs الحقيقية بمحاكاة Google
+const until = async (fn, what, ms = 8000) => {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) { if (fn()) return; await new Promise((r) => setTimeout(r, 100)); }
+  throw new Error('لم يتحقق في الوقت: ' + what);
+};
+const ADMIN_KEY = 'e2e-admin-key-123456';
+const DEPLOY = 'TESTDEPLOYMENTID0123456789abcd';
+const sheet = createBackend({ adminKey: ADMIN_KEY });
+const NAME = 'محمد بن حسين الشرواني';
+let personalLink = '';
+
+await check('التسجيل: نشر الإعدادات ثم مشارك يسجل بياناته فيظهر له الالتزام ويُحفظ مباشرة', async () => {
+  const admin = await newPage({}, { backend: sheet });
+  try {
+    const ap = admin.page;
+    await go(ap, 'registration');
+    await ap.getByLabel('عنوان تطبيق الويب', { exact: true }).fill(`https://script.google.com/macros/s/${DEPLOY}/exec`);
+    await ap.getByLabel('كلمة الإدارة', { exact: true }).fill(ADMIN_KEY);
+    for (const [label, vals] of [['خيارات الاشتراك الشهري المقترحة', [100, 200]], ['خيارات مدة الالتزام المقترحة', [5, 10]]]) {
+      const inp = ap.getByLabel(`إضافة خيار: ${label}`, { exact: true });
+      for (const v of vals) { await inp.fill(String(v)); await inp.locator('xpath=following::button[normalize-space()="إضافة"][1]').click(); }
+    }
+    await ap.getByRole('button', { name: 'نشر إعدادات النموذج' }).click();
+    await ap.getByText('نُشرت إعدادات النموذج').waitFor();
+    const link = await ap.getByLabel('رابط التسجيل', { exact: true }).inputValue();
+    ok(link.endsWith(`#/join/${DEPLOY}`), 'شكل الرابط: ' + link);
+    ok(!link.includes(ADMIN_KEY), 'كلمة الإدارة داخل الرابط!');
+    eq(sheet.get({ action: 'config' }).config.title, 'ميثاق ذرية حسين عمر شرواني', 'عنوان الإعدادات المنشورة');
+
+    const part = await newPage({ permissions: ['clipboard-read', 'clipboard-write'] }, { hash: link.slice(link.indexOf('#')), ready: 'button:has-text("أوافق وأبدأ التسجيل")', backend: sheet });
+    try {
+      const pp = part.page;
+      eq(await pp.locator('h1').innerText(), 'ميثاق ذرية حسين عمر شرواني');
+      await pp.getByRole('button', { name: 'أوافق وأبدأ التسجيل' }).click();
+      eq(await pp.getByText('٢. التزامك').count(), 0, 'الالتزام ظهر قبل المعلومات الأساسية');
+      eq(sheet.rows().length, 0, 'أُرسل شيء قبل إدخال البيانات');
+      await pp.getByLabel('الاسم الثلاثي', { exact: true }).fill(NAME);
+      eq(await pp.getByText('٢. التزامك').count(), 0, 'الالتزام ظهر والجنس لم يُحدد');
+      await pp.getByRole('radio', { name: 'ذكر' }).click();
+      await pp.getByText('٢. التزامك').waitFor();
+      await pp.getByRole('radio', { name: '200 ريال' }).click();
+      await pp.getByRole('radio', { name: '10 سنة' }).click();
+      await pp.getByText('اكتمل تسجيلك').waitFor();
+      await until(() => sheet.rows()[1]?.[15] === 'true', 'حفظ التسجيل المكتمل في الجدول');
+      const row = sheet.rows()[1];
+      eq(row[4], NAME); eq(row[5], 'male'); eq(row[10], '200'); eq(row[11], '10');
+      ok(!row.includes(await pp.evaluate((d) => JSON.parse(localStorage.getItem('ffc-join-' + d)).token, DEPLOY)), 'الرمز السري محفوظ نصًا في الجدول');
+
+      await pp.reload({ waitUntil: 'networkidle' });
+      await pp.getByLabel('الاسم الثلاثي', { exact: true }).waitFor();
+      eq(await pp.getByLabel('الاسم الثلاثي', { exact: true }).inputValue(), NAME, 'الاسم لم يعد بعد التحديث');
+      eq(await pp.getByRole('radio', { name: '200 ريال' }).getAttribute('aria-checked'), 'true', 'الاشتراك لم يعد');
+      eq(await pp.getByRole('radio', { name: '10 سنة' }).getAttribute('aria-checked'), 'true', 'المدة لم تعد');
+
+      await pp.getByRole('button', { name: 'نسخ رابطي الشخصي' }).click();
+      personalLink = await pp.evaluate(() => navigator.clipboard.readText());
+      ok(personalLink.includes(`#/join/${DEPLOY}/`), 'الرابط الشخصي: ' + personalLink);
+    } finally { await part.ctx.close(); }
+
+    // من جهاز آخر (تخزين فارغ) بالرابط الشخصي، على هاتف: يعود التسجيل ولا تمرير أفقي
+    const phone = await newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }, { hash: personalLink.slice(personalLink.indexOf('#')), ready: 'input[aria-label="الاسم الثلاثي"]', backend: sheet });
+    try {
+      eq(await phone.page.getByLabel('الاسم الثلاثي', { exact: true }).inputValue(), NAME, 'الرابط الشخصي لم يستعد التسجيل');
+      const o = await phone.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      ok(o <= 1, 'تمرير أفقي في صفحة المشارك: ' + o);
+    } finally { await phone.ctx.close(); }
+
+    // الإدارة ترى التسجيل وتطبّقه على الفئات
+    await ap.getByRole('tab', { name: /التسجيلات/ }).click();
+    await ap.getByText(NAME).first().waitFor();
+    const txt = await ap.locator('main').innerText();
+    ok(txt.includes('24,000 ريال'), 'إجمالي الالتزام على المدة (200×12×10) غير ظاهر');
+    await ap.getByRole('button', { name: 'تطبيق على فئات الاشتراك' }).click();
+    await ap.getByRole('button', { name: 'تطبيق', exact: true }).click();
+    await go(ap, 'subscriptions');
+    eq(await ap.locator('input[aria-label="العدد المستهدف"]').nth(0).inputValue(), '1', 'عدد فئة الذكور لم يتحدث');
+  } finally { await admin.ctx.close(); }
+});
+
+await check('التسجيل: حذف المشارك لتسجيله، وإغلاق التسجيل، ورابط غير صالح', async () => {
+  const part = await newPage({}, { hash: personalLink.slice(personalLink.indexOf('#')), ready: 'input[aria-label="الاسم الثلاثي"]', backend: sheet });
+  try {
+    await part.page.getByRole('button', { name: 'حذف تسجيلي' }).click();
+    await part.page.getByRole('dialog').getByRole('button', { name: 'حذف تسجيلي' }).click();
+    await until(() => sheet.rows().length === 1, 'حذف الصف من الجدول');
+    await part.page.getByRole('button', { name: 'أوافق وأبدأ التسجيل' }).waitFor();
+  } finally { await part.ctx.close(); }
+
+  sheet.post({ action: 'setConfig', key: ADMIN_KEY, config: { ...sheet.get({ action: 'config' }).config, open: false } });
+  const closed = await newPage({}, { hash: `#/join/${DEPLOY}`, ready: 'button:has-text("أوافق وأبدأ التسجيل")', backend: sheet });
+  try {
+    ok(await closed.page.getByText('التسجيل مغلق حاليًا').isVisible(), 'لا رسالة إغلاق');
+    ok(await closed.page.getByRole('button', { name: 'أوافق وأبدأ التسجيل' }).isDisabled(), 'زر الموافقة مفعّل رغم الإغلاق');
+  } finally { await closed.ctx.close(); }
+
+  const bad = await newPage({}, { hash: '#/join/short', ready: 'text=رابط غير صحيح', backend: sheet });
+  await bad.ctx.close();
+});
 
 await check('19/21. النشر على مسار فرعي: الأصول نسبية، ولا بيانات خاصة داخل ملفات الموقع', async () => {
   const idx = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');

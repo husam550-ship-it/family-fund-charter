@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Circle, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, Loader2, Presentation, ShieldCheck, UserPlus } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { useDerived } from '../lib/derived';
 import { go, SECTIONS, sectionLabel } from '../lib/nav';
@@ -80,8 +80,9 @@ export default function Dashboard() {
       )}
 
       <Card>
-        <div className="grid gap-4 md:grid-cols-[1fr_1fr_14rem]">
+        <div className="grid gap-4 md:grid-cols-2">
           <VarField k="family_name" />
+          <VarField k="charter_name" />
           <VarField k="fund_name" />
           <div>
             <label className="label">حالة صاحب الاسم</label>
@@ -105,6 +106,19 @@ export default function Dashboard() {
             </Callout>
           </div>
         )}
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 text-lg">جاهز للاجتماع العائلي؟</h2>
+        <p className="mb-3 text-sm text-mute">اعرض الشرح المبسط على الحضور قبل النقاش، وأرسل رابط التسجيل ليسجل كل فرد بياناته والتزامه.</p>
+        <div className="flex flex-wrap gap-2">
+          <button className="btn btn-primary" onClick={() => go('present')}>
+            <Presentation className="size-4" /> عرض الميثاق للأسرة
+          </button>
+          <button className="btn btn-soft" onClick={() => go('registration')}>
+            <UserPlus className="size-4" /> رابط التسجيل والالتزامات
+          </button>
+        </div>
       </Card>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
