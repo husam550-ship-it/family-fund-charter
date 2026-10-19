@@ -23,6 +23,8 @@
 المتطلبات: Node.js 20 أو أحدث (يُوصى بـ 22).
 
 ```bash
+git clone https://github.com/husam550-ship-it/family-fund-charter
+cd family-fund-charter      # كل أوامر npm تُشغَّل من داخل هذا المجلد
 npm ci            # تثبيت الاعتماديات
 npm run dev       # تشغيل للتطوير
 npm test          # اختبارات الوحدات (محركات الحساب، العدالة، التعارضات، الحفظ، الوثائق)
@@ -34,11 +36,11 @@ npm run preview   # معاينة ناتج البناء
 
 ```bash
 npm run build
-npx playwright install chromium   # أو اضبط CHROMIUM_PATH على متصفح Chromium لديك
+npx playwright-core install chromium   # أو اضبط CHROMIUM_PATH على متصفح Chromium لديك
 npm run e2e
 ```
 
-يشغّل ملف `e2e/acceptance.mjs` خادمًا محليًا على **مسار فرعي** (`/family-fund-charter/`) يحاكي GitHub Pages، ثم يختبر سيناريوهات القبول: تعديل الاسم، تأثير المتغيرات، فئات المشتركين ومددهم، إضافة أصل عقاري، القروض ونقص السيولة، قرار الاجتماع والمحضر، الحفظ والتراجع، التصدير/الاستيراد وملفات تالفة، النسخ الاحتياطية، PDF/DOCX/Markdown، الهاتف، ومسارات النشر. يحتاج أيضًا إلى `poppler-utils` (الأوامر `pdffonts` و`pdftotext` و`pdfinfo`) و`unzip`.
+يشغّل ملف `e2e/acceptance.mjs` خادمًا محليًا على **مسار فرعي** (`/family-fund-charter/`) يحاكي GitHub Pages، ثم يختبر سيناريوهات القبول: تعديل الاسم، تأثير المتغيرات، فئات المشتركين ومددهم، إضافة أصل عقاري، القروض ونقص السيولة، قرار الاجتماع والمحضر، الحفظ والتراجع، التصدير/الاستيراد وملفات تالفة، النسخ الاحتياطية، PDF/DOCX/Markdown، الهاتف، ومسارات النشر. يحتاج أيضًا إلى `poppler-utils` (الأوامر `pdffonts` و`pdftotext` و`pdfinfo`) و`unzip` لفحص PDF وDOCX؛ وهي متوفرة على Linux وmacOS، وعلى ويندوز شغّل الأمر داخل WSL. وإن غابت فسيفشل اختبارا PDF وDOCX فقط ويمرّ الباقي.
 
 ## النشر على GitHub Pages
 

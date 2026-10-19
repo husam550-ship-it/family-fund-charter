@@ -2,13 +2,14 @@
 // المتصفح: متغير CHROMIUM_PATH، أو المتصفح الافتراضي لـ playwright-core (npx playwright install chromium).
 import http from 'node:http';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
 
 const DIST = path.resolve('dist');
 const PREFIX = '/family-fund-charter/'; // يحاكي مستودعًا فرعيًا على GitHub Pages
-const TMP = fs.mkdtempSync('/tmp/ffc-e2e-');
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'ffc-e2e-'));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.woff': 'font/woff', '.svg': 'image/svg+xml' };
 
 const server = http.createServer((req, res) => {
