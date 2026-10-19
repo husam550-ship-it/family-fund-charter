@@ -1,0 +1,386 @@
+@import '@fontsource/cairo/arabic-400.css';
+@import '@fontsource/cairo/arabic-600.css';
+@import '@fontsource/cairo/arabic-700.css';
+@import '@fontsource/cairo/latin-400.css';
+@import '@fontsource/cairo/latin-600.css';
+@import '@fontsource/cairo/latin-700.css';
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Cairo', 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+
+  --color-brand-50: #f0f6f2;
+  --color-brand-100: #dcebe2;
+  --color-brand-200: #b9d7c6;
+  --color-brand-300: #8dbba2;
+  --color-brand-400: #5a9a7a;
+  --color-brand-500: #3a7d5d;
+  --color-brand-600: #2c6449;
+  --color-brand-700: #24523d;
+  --color-brand-800: #1f4d3a;
+  --color-brand-900: #163a2b;
+
+  --color-ivory: #faf7f0;
+  --color-paper: #fffdf8;
+  --color-ink: #1d2b24;
+  --color-mute: #5d6b63;
+  --color-line: #e4ddcc;
+  --color-gold: #b8923a;
+  --color-gold-soft: #f4ead0;
+  --color-gold-deep: #8a6a22;
+
+  --color-ok: #2c6449;
+  --color-ok-soft: #e3f0e8;
+  --color-warn: #9a6a10;
+  --color-warn-soft: #fbefd2;
+  --color-bad: #a23b2a;
+  --color-bad-soft: #f9e3de;
+  --color-info: #2b5f7a;
+  --color-info-soft: #e1eef4;
+}
+
+@layer base {
+  html {
+    direction: rtl;
+    scroll-behavior: smooth;
+  }
+  body {
+    margin: 0;
+    background: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    line-height: 1.4;
+    font-weight: 700;
+    color: var(--color-brand-900);
+  }
+  input, select, textarea, button {
+    font-family: inherit;
+  }
+  input[type='number']::-webkit-inner-spin-button {
+    appearance: none;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+  /* الأرقام والتواريخ تُعرض من اليسار لليمين داخل النص العربي */
+  .ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+}
+
+@layer components {
+  .card {
+    background: var(--color-paper);
+    border: 1px solid var(--color-line);
+    border-radius: 1rem;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.5rem;
+    padding: 0.4rem 1rem;
+    border-radius: 0.7rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--color-brand-800);
+    color: #fff;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-brand-700);
+  }
+  .btn-soft {
+    background: var(--color-brand-50);
+    color: var(--color-brand-800);
+    border-color: var(--color-brand-100);
+  }
+  .btn-soft:hover:not(:disabled) {
+    background: var(--color-brand-100);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-mute);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-brand-50);
+    color: var(--color-brand-800);
+  }
+  .btn-danger {
+    background: var(--color-bad-soft);
+    color: var(--color-bad);
+    border-color: #efc7bf;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: #f4d3cc;
+  }
+  .btn-gold {
+    background: var(--color-gold-soft);
+    color: var(--color-gold-deep);
+    border-color: #e6d4a2;
+  }
+  .btn-sm {
+    min-height: 2rem;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.82rem;
+    border-radius: 0.55rem;
+  }
+  .input {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.75rem;
+    background: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: 0.65rem;
+    color: var(--color-ink);
+    font-size: 0.95rem;
+  }
+  .input:hover {
+    border-color: var(--color-brand-300);
+  }
+  .input:disabled {
+    background: var(--color-ivory);
+    color: var(--color-mute);
+  }
+  textarea.input {
+    min-height: 5rem;
+    resize: vertical;
+    line-height: 1.7;
+  }
+  .label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-brand-900);
+  }
+  .hint {
+    font-size: 0.78rem;
+    color: var(--color-mute);
+    line-height: 1.6;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.05rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .eyebrow {
+    display: inline-block;
+    padding: 0.1rem 0.7rem;
+    border: 1px solid #e6d4a2;
+    background: var(--color-gold-soft);
+    color: var(--color-gold-deep);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  /* يميز المتغير غير المستكمل في النصوص */
+  mark.missing {
+    background: var(--color-warn-soft);
+    color: var(--color-warn);
+    border-radius: 0.3rem;
+    padding: 0 0.3rem;
+    font-weight: 600;
+  }
+}
+
+/* ───────── مستندات A4: المعاينة والطباعة ───────── */
+.doc-page {
+  background: #fff;
+  color: #1a1a1a;
+  width: 100%;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 18mm 16mm;
+  box-sizing: border-box;
+  box-shadow: 0 6px 28px rgba(31, 77, 58, 0.12);
+  border: 1px solid var(--color-line);
+  font-size: 12.5pt;
+  line-height: 1.9;
+}
+.doc-page h1 {
+  font-size: 22pt;
+  color: #1f4d3a;
+  text-align: center;
+  margin: 0 0 4pt;
+}
+.doc-page h2 {
+  font-size: 15pt;
+  color: #1f4d3a;
+  border-bottom: 2px solid #b8923a;
+  padding-bottom: 3pt;
+  margin: 18pt 0 8pt;
+  break-after: avoid;
+}
+.doc-page h3 {
+  font-size: 12.5pt;
+  color: #24523d;
+  margin: 12pt 0 4pt;
+  break-after: avoid;
+}
+.doc-page p {
+  margin: 0 0 6pt;
+  text-align: justify;
+}
+.doc-page ul,
+.doc-page ol {
+  margin: 0 0 8pt;
+  padding-inline-start: 1.4em;
+}
+.doc-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6pt 0 10pt;
+  font-size: 10.5pt;
+  break-inside: auto;
+}
+.doc-page th,
+.doc-page td {
+  border: 1px solid #c9c2ae;
+  padding: 3pt 6pt;
+  text-align: right;
+  vertical-align: top;
+}
+.doc-page th {
+  background: #eef4f0;
+  color: #1f4d3a;
+}
+.doc-page tr {
+  break-inside: avoid;
+}
+.doc-clause {
+  margin: 0 0 8pt;
+  padding: 4pt 8pt;
+  border-inline-start: 3px solid #1f4d3a;
+  break-inside: avoid;
+}
+.doc-clause.proposed {
+  border-inline-start-color: #b8923a;
+  background: #fbf7ea;
+}
+.doc-clause .tag {
+  font-size: 9pt;
+  font-weight: 700;
+  margin-inline-start: 6pt;
+  padding: 0 5pt;
+  border-radius: 8pt;
+}
+.doc-clause .tag.approved {
+  color: #1f4d3a;
+  background: #dcebe2;
+}
+.doc-clause .tag.proposed {
+  color: #8a6a22;
+  background: #f4ead0;
+}
+.doc-note {
+  border: 1px solid #e6d4a2;
+  background: #fbf7ea;
+  padding: 5pt 8pt;
+  border-radius: 6pt;
+  font-size: 10.5pt;
+  margin: 6pt 0 10pt;
+}
+.doc-note.warn {
+  border-color: #efc7bf;
+  background: #fbeeea;
+}
+.doc-cover {
+  text-align: center;
+  padding: 40mm 0 20mm;
+  break-after: page;
+}
+.doc-cover .sub {
+  font-size: 13pt;
+  color: #555;
+}
+.doc-toc li {
+  margin: 0;
+  list-style: none;
+}
+.doc-sign {
+  display: flex;
+  gap: 12pt;
+  margin-top: 26pt;
+  flex-wrap: wrap;
+}
+.doc-sign div {
+  flex: 1 1 30%;
+  text-align: center;
+  border-top: 1px solid #555;
+  padding-top: 4pt;
+  min-width: 120pt;
+}
+.page-break {
+  break-after: page;
+}
+
+#print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 14mm 18mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  #root {
+    display: none !important;
+  }
+  #print-root {
+    display: block !important;
+  }
+  .doc-page {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    max-width: none;
+  }
+}
+
+/* حركة هادئة وتقليلها عند الطلب */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+/* وضع العرض للاجتماعات */
+.present {
+  font-size: 1.35rem;
+}
+.present .present-title {
+  font-size: 2.4rem;
+}
+
+/* حاويات الرسوم تبقى LTR داخليًا مع نصوص عربية للمحاور */
+.chart-box {
+  direction: ltr;
+}
