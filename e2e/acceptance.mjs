@@ -432,6 +432,35 @@ await check('الشرح المبسط: عرض بالأسهم، وإخفاء شر�
   ok(doc.includes('ما الذي ندفعه؟') && !doc.includes('كيف نحفظ المال ونراقبه؟'), 'الشريحة المخفاة ما زالت في الوثيقة');
 });
 
+await check('تصدير الشرائح كصور: ZIP بصورة PNG بقياس 1920×1080 لكل شريحة، والعرض يتسع للشاشة', async () => {
+  await go(page, 'present');
+  await page.setViewportSize({ width: 1280, height: 720 });
+  try {
+    await page.getByRole('button', { name: /بدء العرض/ }).click();
+    const deck = page.getByRole('dialog', { name: 'عرض الميثاق للأسرة' });
+    const n = Number((await deck.innerText()).match(/الشريحة 1 من (\d+)/)[1]);
+    for (let i = 0; i < n; i++) {
+      const over = await page.evaluate(() => { const el = document.querySelector('[data-slide-scroll]'); return el.scrollHeight - el.clientHeight; });
+      ok(over <= 1, `الشريحة ${i + 1} تتجاوز الشاشة بمقدار ${over}px`);
+      await page.keyboard.press('ArrowLeft');
+    }
+    await page.keyboard.press('Escape');
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 120000 }), page.getByRole('button', { name: 'تصدير الشرائح كصور' }).click()]);
+    ok(/^slides-\d{4}-\d{2}-\d{2}\.zip$/.test(dl.suggestedFilename()), 'اسم الملف: ' + dl.suggestedFilename());
+    const f = path.join(TMP, 'slides.zip');
+    await dl.saveAs(f);
+    const names = execFileSync('unzip', ['-Z1', f]).toString().trim().split('\n');
+    eq(names.length, n, 'عدد الصور');
+    ok(names.every((x) => /^slide-\d\d\.png$/.test(x)), 'أسماء الصور: ' + names.join(','));
+    for (const name of [names[0], names[n - 1]]) {
+      const png = execFileSync('unzip', ['-p', f, name], { maxBuffer: 1 << 26 });
+      ok(png.subarray(1, 4).toString() === 'PNG', 'ليس PNG: ' + name);
+      eq(`${png.readUInt32BE(16)}x${png.readUInt32BE(20)}`, '1920x1080', 'قياس ' + name);
+      ok(png.length > 20000, 'صورة شبه فارغة: ' + name);
+    }
+  } finally { await page.setViewportSize({ width: 1366, height: 1000 }); }
+});
+
 await check('الأرقام السالبة والتنسيق: لا رموز متغيرات خام {{ في أي وثيقة من الأربع عشرة', async () => {
   await go(page, 'reports');
   const docs = page.locator('main li button[aria-current]');

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 import type { Slide } from '../present/slides';
 import { cx } from './ui';
-import { QrCode } from './QrCode';
+import { SlideView, surfaceOf } from './SlideView';
 
 /** عرض الشرائح بملء الشاشة. في الاتجاه العربي: السهم الأيسر للأمام والأيمن للخلف */
 export const Deck = ({ slides, onClose }: { slides: Slide[]; onClose: () => void }) => {
@@ -29,14 +29,7 @@ export const Deck = ({ slides, onClose }: { slides: Slide[]; onClose: () => void
 
   const cover = slide.kind === 'cover';
   return (
-    <div
-      ref={root}
-      tabIndex={-1}
-      role="dialog"
-      aria-modal="true"
-      aria-label="عرض الميثاق للأسرة"
-      className={cx('fixed inset-0 z-[60] flex flex-col outline-none', cover ? 'bg-brand-900 text-ivory' : 'bg-paper text-ink')}
-    >
+    <div ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label="عرض الميثاق للأسرة" className={cx('fixed inset-0 z-[60] flex flex-col outline-none', surfaceOf(slide))}>
       <div className={cx('flex items-center gap-3 px-4 py-2 text-sm', cover ? 'text-gold-soft' : 'text-mute')}>
         <span className="flex-1">
           الشريحة {i + 1} من {slides.length}
@@ -53,59 +46,8 @@ export const Deck = ({ slides, onClose }: { slides: Slide[]; onClose: () => void
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pb-4 sm:px-12">
-        <div className={cx('mx-auto flex min-h-full max-w-5xl flex-col justify-center gap-5 py-4', cover && 'items-center text-center')}>
-          {cover ? (
-            <>
-              <h1 className="text-[clamp(2rem,6vw,4.5rem)] leading-tight text-ivory">{slide.title}</h1>
-              {slide.lead && <p className="text-[clamp(1.2rem,2.6vw,2rem)] text-gold-soft">{slide.lead}</p>}
-            </>
-          ) : (
-            <>
-              <h2 className="text-[clamp(1.8rem,4.2vw,3.2rem)] leading-tight text-brand-900">{slide.title}</h2>
-              {slide.lead && <p className="text-[clamp(1.1rem,2.4vw,1.9rem)] font-semibold text-brand-700">{slide.lead}</p>}
-            </>
-          )}
-
-          {slide.points.length > 0 && (
-            <ul className={cx('space-y-3 text-[clamp(1.05rem,2.2vw,1.8rem)] leading-relaxed', cover ? 'max-w-3xl' : 'list-disc ps-7 marker:text-gold')}>
-              {slide.points.map((t, k) => (
-                <li key={k} className={cover ? 'list-none' : undefined}>
-                  {t}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {slide.facts.some((f) => f.value !== slide.qr) && (
-            <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {slide.facts
-                .filter((f) => f.value !== slide.qr)
-                .map((f) => (
-                <div key={f.label} className="rounded-xl border border-line bg-brand-50 p-4">
-                  <dt className="text-sm font-semibold text-mute">{f.label}</dt>
-                  <dd className="mt-1 break-words text-[clamp(1.05rem,2vw,1.6rem)] font-bold text-brand-900">{f.value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-
-          {slide.qr && (
-            <div className="flex items-center gap-5">
-              <QrCode value={slide.qr} size={176} label="رمز QR لرابط التسجيل" />
-              <div className="min-w-0 space-y-2">
-                <p className="text-lg font-semibold text-brand-900">امسح الرمز بكاميرا الهاتف لفتح صفحة التسجيل</p>
-                <p className="ltr break-all text-end text-sm text-mute">{slide.qr}</p>
-              </div>
-            </div>
-          )}
-
-          {slide.ask && (
-            <div className="rounded-xl border-s-4 border-gold bg-gold-soft p-4 text-[clamp(1.05rem,2.1vw,1.7rem)] font-bold text-gold-deep">
-              السؤال الذي سنقرره: {slide.ask}
-            </div>
-          )}
-        </div>
+      <div className="min-h-0 flex-1" style={{ fontSize: 'clamp(16px, 2.1vw, 34px)' }}>
+        <SlideView slide={slide} />
       </div>
 
       <div className={cx('flex items-center gap-3 px-4 py-3', cover && 'text-ivory')}>

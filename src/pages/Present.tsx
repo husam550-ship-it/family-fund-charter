@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
-import { FileText, Play } from 'lucide-react';
+import { FileText, Images, Play } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { useDerived } from '../lib/derived';
-import { useUi } from '../lib/ui';
+import { toast, useUi } from '../lib/ui';
+import { downloadBlob } from '../lib/download';
+import { todayIso } from '../lib/format';
 import { go } from '../lib/nav';
 import { allSlides } from '../present/slides';
 import { projectJoinLink } from '../registration/link';
 import { Deck } from '../components/Deck';
+import { SlideExporter } from '../components/SlideExporter';
 import { Badge, Callout, Card, SectionHead } from '../components/ui';
 import { Check, TextArea } from '../components/fields';
 
@@ -14,6 +17,7 @@ export default function Present() {
   const { project, ctx, sims } = useDerived();
   const update = useStore((s) => s.update);
   const [playing, setPlaying] = useState(false);
+  const [exporting, setExporting] = useState<number | null>(null);
   const joinLink = projectJoinLink(project);
   const slides = useMemo(() => allSlides({ p: project, ctx, base: sims.base, joinLink }), [project, ctx, sims, joinLink]);
   const shown = slides.filter((s) => !s.hidden);
@@ -33,6 +37,9 @@ export default function Present() {
           <>
             <button className="btn btn-primary" onClick={() => setPlaying(true)} disabled={shown.length === 0}>
               <Play className="size-4" /> بدء العرض
+            </button>
+            <button className="btn btn-soft" onClick={() => setExporting(0)} disabled={shown.length === 0 || exporting !== null}>
+              <Images className="size-4" /> {exporting === null ? 'تصدير الشرائح كصور' : `جارٍ تجهيز الشريحة ${exporting} من ${shown.length}…`}
             </button>
             <button className="btn btn-soft" onClick={openAsDocument}>
               <FileText className="size-4" /> نسخة مطبوعة للتوزيع
@@ -72,6 +79,21 @@ export default function Present() {
       </Card>
 
       {playing && <Deck slides={shown} onClose={() => setPlaying(false)} />}
+      {exporting !== null && (
+        <SlideExporter
+          slides={shown}
+          onProgress={setExporting}
+          onDone={(zip) => {
+            setExporting(null);
+            downloadBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), `slides-${todayIso()}.zip`);
+            toast(`صُدّرت ${shown.length} صورة (1920×1080) في ملف ZIP.`);
+          }}
+          onFail={(e) => {
+            setExporting(null);
+            toast(`تعذر تصدير الصور: ${e instanceof Error ? e.message : String(e)}`, 'error');
+          }}
+        />
+      )}
     </div>
   );
 }
